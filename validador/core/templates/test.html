@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Validador de direcciones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    input { padding: 8px; width: 360px; }
+    button { padding: 8px 12px; margin-left: 8px; }
+    pre { background: #111; color: #0f0; padding: 12px; border-radius: 6px; max-width: 720px; overflow:auto;}
+  </style>
+</head>
+<body>
+  <h1>Validador</h1>
+  <p>Probá con: <code>Lavalle y Bustamante</code></p>
+  <input id="q" placeholder="Escribe una dirección..." />
+  <button onclick="go()">Validar</button>
+  <pre id="out">{}</pre>
+
+  <script>
+  async function go(){
+    const q = document.getElementById('q').value.trim();
+    const r = await fetch('/api/validate/?q=' + encodeURIComponent(q));
+    const j = await r.json();
+    document.getElementById('out').textContent = JSON.stringify(j, null, 2);
+  }
+  </script>
+</body>
+</html>
