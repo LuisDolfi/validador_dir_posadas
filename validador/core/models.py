@@ -2,6 +2,31 @@ from django.db import models
 
 # Create your models here.
 from django.contrib.gis.db import models
+# Preferí el de GIS; si no está, caemos al de Postgres
+try:
+    from django.contrib.gis.db.models.indexes import GistIndex
+except ModuleNotFoundError:
+    from django.contrib.postgres.indexes import GistIndex
+
+class Parcel(models.Model):
+    # Códigos catastrales del JSON de IDE Posadas
+    district = models.CharField(max_length=50, null=True, blank=True)   # DISTRITO
+    section  = models.CharField(max_length=10, null=True, blank=True)   # SEC / SECCION (si existiera)
+    block    = models.CharField(max_length=10, null=True, blank=True)   # MAN
+    lot      = models.CharField(max_length=10, null=True, blank=True)   # LOTE
+    chacra   = models.CharField(max_length=10, null=True, blank=True)
+    parcel   = models.CharField(max_length=10, null=True, blank=True)   # PAR
+    unit     = models.CharField(max_length=10, null=True, blank=True)   # UNFU
+    gid      = models.CharField(max_length=64, unique=True)             # IDGIS
+    geom     = models.MultiPolygonField(srid=4326)
+
+    class Meta:
+        indexes = [GistIndex(fields=["geom"])]
+        verbose_name = "Parcela"
+        verbose_name_plural = "Parcelas"
+
+    def __str__(self):
+        return f"Parcela {self.block}-{self.lot} ({self.gid})"
 
 # --- 1. Calles y Avenidas ---
 class Street(models.Model):

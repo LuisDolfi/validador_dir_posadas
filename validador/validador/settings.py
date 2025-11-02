@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
         # Geo y API
     'django.contrib.gis',
+    'django.contrib.postgres',
     'rest_framework',
 
     # Tu app

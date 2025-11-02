@@ -2,9 +2,15 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.gis.gdal import DataSource, GDALException
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
-from validador.core.models import Street, BlockGrid, Building
+from validador.core.models import Street, BlockGrid, Building, Parcel
 from pathlib import Path
 import json
+from django.apps import apps
+# Modelos
+Parcel    = apps.get_model('core', 'Parcel')
+Street    = apps.get_model('core', 'Street')
+BlockGrid = apps.get_model('core', 'BlockGrid')
+Building  = apps.get_model('core', 'Building')
 
 def pick_value(props: dict, preferred: list[str], fuzzy_terms: list[str] = None):
     """Devuelve props[k] para el primer k hallado. Si no aparece exacto,
@@ -67,10 +73,29 @@ def read_features(path: Path):
 
 class Command(BaseCommand):
     help = "Carga archivos GeoJSON/JSON (calles, avenidas, chacras, edificios)"
+    def props_of(feat):
+        # Caso GeoJSON (feat es un dict con 'properties')
+        if isinstance(feat, dict):
+            return feat.get("properties", {}) or {}
 
+        # Caso GDAL (feat es un OGRFeature)
+        names = getattr(feat, "fields", None)
+        if names:
+            try:
+                # names suele ser lista de nombres; get(name) da el valor
+                return {name: feat.get(name) for name in names}
+            except Exception:
+                pass
+
+        # Fallback: si por algún motivo vino lista/tupla, la convertimos a dict índice->valor
+        if isinstance(feat, (list, tuple)):
+            return {str(i): v for i, v in enumerate(feat)}
+
+        return {}
+    
     def add_arguments(self, parser):
         parser.add_argument("path", type=str, help="Ruta al archivo (relativa o absoluta)")
-        parser.add_argument("--type", choices=["calle", "avenida", "chacra", "edificio", "manzanero"], help="Tipo de datos a importar")
+        parser.add_argument("--type", choices=["calle", "avenida", "chacra", "edificio", "manzanero", "cuadricula"], help="Tipo de datos a importar")
 
 
     def handle(self, *args, **opts):
@@ -218,10 +243,6 @@ class Command(BaseCommand):
                     geom=g,
                 )
 
-
-
-
-
         elif tipo == "manzanero":
             for f in feats:
                 props = props_dict_gdal(f) if mode == "gdal" else props_of(f)
@@ -239,4 +260,41 @@ class Command(BaseCommand):
                     manzana=(manzana or "").strip() or None,
                     geom=g,
                 )
+
+        elif tipo == "cuadricula":
+            from validador.core.models import Parcel
+
+            ok = 0
+            for f in feats:
+                # Propiedades: soporta GDAL (f.get) y JSON (dict)
+                if hasattr(f, "get") and hasattr(f, "fields"):
+                    # GDAL feature
+                    props = {k: f.get(k) for k in f.fields}
+                else:
+                    # JSON feature: dict con 'properties'
+                    props = props_of(f)  # tu helper que hace f.get("properties", {})
+                    if not isinstance(props, dict):
+                        props = {}
+
+                g = geom_of(f)  # ya te devuelve GEOSGeometry con SRID=4326
+
+                Parcel.objects.update_or_create(
+                    gid=props.get("IDGIS"),
+                    defaults={
+                        "district": props.get("DISTRITO"),
+                        "block":    props.get("MAN"),
+                        "chacra":   props.get("CHA"),
+                        "lot":      props.get("LOTE"),
+                        "parcel":   props.get("PAR"),
+                        "unit":     props.get("UNFU"),
+                        "geom":     g,
+                    },
+                )
+                ok += 1
+
+            self.stdout.write(self.style.SUCCESS(f"Cuadrícula importada: {ok} filas"))
+
+
+
+
 
