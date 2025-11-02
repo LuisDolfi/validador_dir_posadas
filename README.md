@@ -11,15 +11,15 @@ Utiliza datos públicos del **IDE Posadas** y scripts auxiliares para embellecer
 ## Estructura de Datos
 
 data/
-raw/ # Archivos crudos descargados del IDE Posadas
+raw/ # Archivos crudos descargados del IDE Posadas.
 pretty/ # (Se genera localmene con pretty_geojson.py)
 
 Los archivos en `pretty/` no se versionan para mantener el repositorio liviano.
 Para generarlos localmente:
 
-```bash
+``` bash
 python scripts/pretty_geojson.py --in data/raw --out data/pretty
-
+```
 ## Entorno de desarrollo
 
 python3 -m venv .venv
@@ -33,4 +33,4 @@ Construir un sistema que permita:
 * Detectar ambigüedades.
 * Preparar datos limpios para sistemas logísticos inteligentes.
 
-Repositorio de desarrollo académico - Tecnicatura en Ciencias de Datos e Inteligencia Artificial.
+_Repositorio de desarrollo académico - Tecnicatura en Ciencias de Datos e Inteligencia Artificial._
