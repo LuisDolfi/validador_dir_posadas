@@ -1,0 +1,25 @@
+
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl mb-3">Historial de Validaciones</h2>
+<table class="w-full border-collapse text-sm">
+  <tr class="bg-gray-200">
+    <th>ID</th><th>Usuario</th><th>Texto</th><th>Status</th><th>Score</th><th>Acciones</th>
+  </tr>
+  {% for log in logs %}
+  <tr class="border-b hover:bg-gray-100">
+    <td>{{ log.id }}</td>
+    <td>{{ log.user|default:"-" }}</td>
+    <td>{{ log.raw_text|truncatechars:40 }}</td>
+    <td>{{ log.status }}</td>
+    <td>{{ log.score }}</td>
+    <td>
+      <a href="{% url 'core:querylog_detail' log.id %}" class="text-blue-600">Ver</a> |
+      <a href="{% url 'core:querylog_delete' log.id %}" class="text-red-600">Eliminar</a>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="6" class="text-center py-4">No hay registros</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

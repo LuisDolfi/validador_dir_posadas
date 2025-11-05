@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl mb-3">Detalle de validación #{{ log.id }}</h2>
+<ul class="text-sm">
+  <li><b>Usuario:</b> {{ log.user|default:"-" }}</li>
+  <li><b>Texto original:</b> {{ log.raw_text }}</li>
+  <li><b>Normalizado:</b> {{ log.normalized }}</li>
+  <li><b>Status:</b> {{ log.status }}</li>
+  <li><b>Respuesta LLM:</b> {{ log.llm_reason }}</li>
+  <li><b>Score:</b> {{ log.score }}</li>
+  <li><b>Quality:</b> {{ log.quality }}</li>
+  <li><b>Fecha:</b> {{ log.created_at }}</li>
+</ul>
+<a href="{% url 'core:querylog_list' %}" class="text-blue-600">← Volver al listado</a>
+{% endblock %}

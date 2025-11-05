@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Inicio · VADI{% endblock %}
+{% block content %}
+
+<!-- wrapper del hero -->
+<section class="hero-soft py-8">
+  <div class="max-w-5xl mx-auto card-soft p-6 sm:p-8">
+    <h1 class="text-5xl font-extrabold text-gray-900 leading-tight underline-accent">
+      🇦🇷 VADI — Validador de Direcciones Inteligente
+    </h1>
+
+    <p class="mt-4 text-lg text-gray-700">
+      Proyecto desarrollado en Misiones, Argentina. 
+    <p class="mt-3 text-lg text-gray-700"></p>  
+      Detecta, corrige y valida direcciones con Inteligencia Artificial.
+    </p>
+
+    <div class="mt-8">
+      <a href="{% url 'login' %}"
+         class="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-700 shadow">
+        Ingresar al Validador
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<div class="mt-10 text-center">
+
+
+</div>
+
+{% endblock %}

@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # lee automáticamente el archivo .env en la raíz del proyecto
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -31,19 +35,24 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Django base apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-        # Geo y API
+    
+    # Geo y API
     'django.contrib.gis',
     'django.contrib.postgres',
     'rest_framework',
+    'django_filters',
 
-    # Tu app
+    # Mis apps locales
     'validador.core',
+    'validacion',
+    #'dashboard'
 ]
 
 MIDDLEWARE = [
@@ -61,7 +70,7 @@ ROOT_URLCONF = 'validador.validador.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,14 +103,14 @@ env = environ.Env()
 environ.Env.read_env(ROOT_DIR / '.env')  # 👈 leé el .env correcto
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': env('DB_NAME', default='validador_db'),
-        'USER': env('DB_USER', default='luis'),
-        'PASSWORD': env('DB_PASSWORD', default='tu_password'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
-    }
+    "default": {
+        'ENGINE': "django.contrib.gis.db.backends.postgis",
+        'NAME': "validador_db",
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
+   }
 }
 
 
@@ -123,7 +132,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/"             # no importa; lo sobreescribe get_success_url()
+LOGOUT_REDIRECT_URL = "/"            # a dónde volver al salir
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -142,7 +153,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Opcional, pero recomendado para proyectos locales (como VADI)
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+STATICFILES_DIRS = [
+    BASE_DIR / "validador" / "static",
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

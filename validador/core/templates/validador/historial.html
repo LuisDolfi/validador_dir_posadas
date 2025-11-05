@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Historial{% endblock %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Últimos 50 registros</h2>
+<div class="overflow-x-auto bg-white rounded-xl shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="text-left p-3">Fecha</th>
+        <th class="text-left p-3">Entrada</th>
+        <th class="text-left p-3">Normalizada</th>
+        <th class="text-left p-3">Quality</th>
+        <th class="text-left p-3">Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr class="border-t">
+        <td class="p-3 whitespace-nowrap">{{ r.created_at|date:"Y-m-d H:i" }}</td>
+        <td class="p-3">{{ r.raw_text }}</td>
+        <td class="p-3">{{ r.normalized|default:"-" }}</td>
+        <td class="p-3">{{ r.quality|default:"-" }}</td>
+        <td class="p-3">{{ r.score|default:"-" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td class="p-3" colspan="5">Sin registros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

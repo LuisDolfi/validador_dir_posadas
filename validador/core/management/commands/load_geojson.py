@@ -6,6 +6,8 @@ from validador.core.models import Street, BlockGrid, Building, Parcel
 from pathlib import Path
 import json
 from django.apps import apps
+
+
 # Modelos
 Parcel    = apps.get_model('core', 'Parcel')
 Street    = apps.get_model('core', 'Street')
@@ -262,8 +264,6 @@ class Command(BaseCommand):
                 )
 
         elif tipo == "cuadricula":
-            from validador.core.models import Parcel
-
             ok = 0
             for f in feats:
                 # Propiedades: soporta GDAL (f.get) y JSON (dict)

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl mb-3">Eliminar registro #{{ log.id }}</h2>
+<p>¿Seguro que querés eliminar este registro?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded">Eliminar</button>
+  <a href="{% url 'core:querylog_list' %}" class="ml-2 text-gray-700">Cancelar</a>
+</form>
+{% endblock %}

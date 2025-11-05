@@ -8,7 +8,7 @@ ENV/
 *.pyd
 __pycache__/
 *.sqlite3
-
+# Archivos de entorno (credenciales, API keys, etc.)
 *.env
 .env.*
 .DS_Store

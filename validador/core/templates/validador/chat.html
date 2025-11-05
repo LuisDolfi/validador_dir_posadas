@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-3">Chat con VADI</h2>
+
+<div id="chat" class="max-w-xl bg-white/70 p-4 rounded-xl shadow">
+  <div id="msgs" class="space-y-2 mb-3 text-sm leading-relaxed h-64 overflow-y-auto"></div>
+  <input id="inp" class="w-full p-2 border rounded" placeholder="Escribí una dirección... (ej: Lavalle 1234)" />
+</div>
+
+<script>
+const msgs = document.getElementById('msgs');
+const inp  = document.getElementById('inp');
+
+function push(role, text){
+  const div = document.createElement('div');
+  div.innerHTML = `<b>${role}:</b> ${text}`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+inp.addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter') return;
+  const text = inp.value.trim();
+  if (!text) return;
+  push('Vos', text);
+  inp.value = '';
+  try {
+    const r = await fetch('/api/chat/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    const data = await r.json();
+    push('VADI', data.response || 'No pude responder ahora.');
+  } catch (err) {
+    push('VADI', 'Error de conexión 😕');
+  }
+});
+</script>
+{% endblock %}

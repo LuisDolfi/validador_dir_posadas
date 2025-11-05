@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-3">Dashboard de VADI</h2>
+
+<form method="get" class="mb-4 flex flex-wrap items-end gap-3">
+  <div>
+    <label class="block text-sm">Rango</label>
+    <select name="range" id="range" class="border rounded px-2 py-1">
+      <option value="7d"   {% if selected_range == "7d" %}selected{% endif %}>Últimos 7 días</option>
+      <option value="30d"  {% if selected_range == "30d" %}selected{% endif %}>Últimos 30 días</option>
+      <option value="all"  {% if selected_range == "all" %}selected{% endif %}>Todo</option>
+      <option value="custom" {% if selected_range == "custom" %}selected{% endif %}>Personalizado</option>
+    </select>
+  </div>
+  <div id="customDates" class="flex items-end gap-2" style="display:none">
+    <div>
+      <label class="block text-sm">Desde</label>
+      <input type="date" name="from" value="{{ from }}" class="border rounded px-2 py-1">
+    </div>
+    <div>
+      <label class="block text-sm">Hasta</label>
+      <input type="date" name="to" value="{{ to }}" class="border rounded px-2 py-1">
+    </div>
+  </div>
+  <button class="bg-emerald-600 text-white px-3 py-1 rounded">Aplicar</button>
+</form>
+
+<p><b>Total de validaciones:</b> {{ total }}</p>
+<p><b>Promedio de Score:</b> {{ avg_score }}</p>
+
+<div class="my-5">
+  <canvas id="statusChart"></canvas>
+</div>
+
+<div class="my-8">
+  <h3 class="text-lg font-semibold mb-2">Validaciones por día</h3>
+  <canvas id="dailyChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const statusData = JSON.parse('{{ by_status|escapejs }}');
+const logsByDay = JSON.parse('{{ logs_by_day|escapejs }}');
+
+// Toggle de fechas personalizadas
+function toggleCustom() {
+  const sel = document.getElementById('range');
+  document.getElementById('customDates').style.display =
+    sel.value === 'custom' ? 'flex' : 'none';
+}
+toggleCustom();
+document.getElementById('range').addEventListener('change', toggleCustom);
+
+// Barras: validaciones por estado
+new Chart(document.getElementById('statusChart'), {
+  type: 'bar',
+  data: {
+    labels: statusData.map(d => d.status || "Sin estado"),
+    datasets: [{
+      label: 'Validaciones por estado',
+      data: statusData.map(d => d.c),
+      backgroundColor: ['#60a5fa','#facc15','#34d399','#f87171'],
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display:false } } }
+});
+
+// Línea: validaciones por día
+new Chart(document.getElementById('dailyChart'), {
+  type: 'line',
+  data: {
+    labels: logsByDay.map(d => d.day),
+    datasets: [{
+      label: 'Consultas diarias',
+      data: logsByDay.map(d => d.count),
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16,185,129,.15)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 3,
+      pointHoverRadius: 5
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Fecha' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } }
+    }
+  }
+});
+</script>
+<h3 class="text-lg font-semibold mt-10 mb-2">Heatmap geográfico</h3>
+<div id="map" style="height: 420px; border-radius: 12px; overflow: hidden;"></div>
+
+<!-- Leaflet + Heat plugin -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+// 1) Inicializar mapa (centro Posadas aproximado)
+const map = L.map('map', { zoomControl: true }).setView([-27.37, -55.90], 12);
+
+// 2) Capa base
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19, attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+// 3) Pedir datos al backend con el mismo rango del Dashboard
+const params = new URLSearchParams(window.location.search); // ?range=...&from=...&to=...
+const heatUrl = "{% url 'validador.core:heatmap_data' %}" + (params.toString() ? "?" + params.toString() : "");
+
+fetch(heatUrl)
+  .then(r => r.json())
+  .then(({points}) => {
+    if (!points || points.length === 0) return;
+
+    // Configuración: radius en píxeles, blur suave
+    const layer = L.heatLayer(points, {
+      radius: 18,
+      blur: 14,
+      maxZoom: 17,
+      // Opcional: escala pesos (si score está 0-1, dejalo; si 0-100, dividí)
+      // max: 5
+    }).addTo(map);
+
+    // Ajustar vista a datos
+    const latlngs = points.map(p => L.latLng(p[0], p[1]));
+    const bounds = L.latLngBounds(latlngs);
+    if (bounds.isValid()) map.fitBounds(bounds.pad(0.2));
+  })
+  .catch(err => console.error("Heatmap error:", err));
+</script>
+{% endblock %}
+
